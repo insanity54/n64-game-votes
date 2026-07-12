@@ -1,10 +1,23 @@
 {
-  "name": "@insanity54/quartz-game-votes",
+  "name": "@insanity54/n64-game-votes",
   "version": "0.1.0",
   "description": "Quartz plugin that renders a game votes table with box art from TheGamesDB",
   "type": "module",
   "license": "MIT",
   "author": "insanity54",
+  "homepage": "https://github.com/insanity54/n64-game-votes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/insanity54/n64-game-votes"
+  },
+  "keywords": [
+    "quartz",
+    "quartz-plugin",
+    "n64",
+    "nintendo64",
+    "games",
+    "votes"
+  ],
   "files": [
     "dist",
     "README.md",

@@ -1,18 +1,18 @@
-# @insanity54/quartz-game-votes
+# @insanity54/n64-game-votes
 
 A Quartz plugin that renders a game votes table with box art from TheGamesDB.
 
 ## Installation
 
 ```bash
-npx quartz plugin add github:insanity54/insanity54-game-votes
+npx quartz plugin add github:insanity54/n64-game-votes
 ```
 
 ## Usage
 
 ```yaml
 plugins:
-  - source: github:insanity54/insanity54-game-votes
+  - source: github:insanity54/n64-game-votes
     enabled: true
     options:
       dataUrl: "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64-Game-I-Play-Next"
