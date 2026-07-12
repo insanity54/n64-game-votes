@@ -3,6 +3,7 @@ services:
     build: .
     volumes:
       - site-data:/app/_site
+      - api-cache:/app/.cache
     env_file:
       - .env
     restart: unless-stopped
@@ -21,3 +22,4 @@ services:
 
 volumes:
   site-data:
+  api-cache:

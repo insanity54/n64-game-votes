@@ -1,4 +1,37 @@
 import EleventyFetch from "@11ty/eleventy-fetch";
+import { createHash } from "crypto";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
+import { join } from "path";
+
+const CACHE_DIR = join(process.cwd(), ".cache", "api");
+
+function getCacheKey(url) {
+  return createHash("sha256").update(url).digest("hex");
+}
+
+async function cachedFetch(url, durationMs) {
+  mkdirSync(CACHE_DIR, { recursive: true });
+  const key = getCacheKey(url);
+  const cacheFile = join(CACHE_DIR, `${key}.json`);
+
+  if (existsSync(cacheFile)) {
+    const cached = JSON.parse(readFileSync(cacheFile, "utf-8"));
+    if (Date.now() - cached.time < durationMs) {
+      return cached.data;
+    }
+  }
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`HTTP ${res.status} for ${url}: ${body}`);
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  writeFileSync(cacheFile, JSON.stringify({ time: Date.now(), data }));
+  return data;
+}
 
 const GAMESDB_API_KEY = process.env.GAMESDB_API_KEY;
 const GAMESDB_BASE = "https://api.thegamesdb.net/v1.1";
@@ -13,15 +46,8 @@ async function fetchGameImage(gameName) {
 
   try {
     const searchUrl = `${GAMESDB_BASE}/Games/ByGameName?apikey=${GAMESDB_API_KEY}&name=${encodeURIComponent(gameName)}&filter[platform]=3&include=boxart`;
-    const res = await fetch(searchUrl);
+    const data = await cachedFetch(searchUrl, 90 * 24 * 60 * 60 * 1000);
 
-    if (!res.ok) {
-      const body = await res.text();
-      console.error(`TheGamesDB ${res.status} for "${gameName}": ${body}`);
-      return undefined;
-    }
-
-    const data = await res.json();
     const games = data?.data?.games;
     if (!games || Object.keys(games).length === 0) return undefined;
 
@@ -53,15 +79,8 @@ async function fetchYouTubeChannelImage(channelUrl) {
     if (!handle) return undefined;
 
     const apiUrl = `https://www.googleapis.com/youtube/v3/channels?forHandle=${encodeURIComponent(handle)}&part=snippet&key=${YOUTUBE_API_KEY}`;
-    const res = await fetch(apiUrl);
+    const data = await cachedFetch(apiUrl, 90 * 24 * 60 * 60 * 1000);
 
-    if (!res.ok) {
-      const body = await res.text();
-      console.error(`YouTube API ${res.status} for "${handle}": ${body}`);
-      return undefined;
-    }
-
-    const data = await res.json();
     return data?.items?.[0]?.snippet?.thumbnails?.default?.url || undefined;
   } catch (e) {
     console.error(`Failed to fetch YouTube image for "${channelUrl}":`, e.message);
