@@ -1,0 +1,61 @@
+{
+  "name": "@insanity54/quartz-game-votes",
+  "version": "0.1.0",
+  "description": "Quartz plugin that renders a game votes table with box art from TheGamesDB",
+  "type": "module",
+  "license": "MIT",
+  "author": "insanity54",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@11ty/eleventy-fetch": "^5.1.3"
+  },
+  "peerDependencies": {
+    "preact": "^10.0.0"
+  },
+  "devDependencies": {
+    "@quartz-community/types": "github:quartz-community/types",
+    "@types/node": "^24.10.0",
+    "preact": "^10.28.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "quartz": {
+    "name": "game-votes",
+    "displayName": "Game Votes",
+    "category": "component",
+    "version": "1.0.0",
+    "quartzVersion": ">=5.0.0",
+    "requiresInstall": false,
+    "dependencies": [],
+    "defaultOrder": 100,
+    "defaultEnabled": true,
+    "defaultOptions": {
+      "dataUrl": "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64-Game-I-Play-Next",
+      "gamesdbApiKey": "",
+      "platformId": 3,
+      "cacheDuration": "1d"
+    }
+  }
+}
