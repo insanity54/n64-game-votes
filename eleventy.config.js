@@ -13,11 +13,15 @@ async function fetchGameImage(gameName) {
 
   try {
     const searchUrl = `${GAMESDB_BASE}/Games/ByGameName?apikey=${GAMESDB_API_KEY}&name=${encodeURIComponent(gameName)}&filter[platform]=3&include=boxart`;
-    const data = await EleventyFetch(searchUrl, {
-      duration: "90d",
-      type: "json",
-    });
+    const res = await fetch(searchUrl);
 
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`TheGamesDB ${res.status} for "${gameName}": ${body}`);
+      return undefined;
+    }
+
+    const data = await res.json();
     const games = data?.data?.games;
     if (!games || Object.keys(games).length === 0) return undefined;
 
@@ -49,11 +53,15 @@ async function fetchYouTubeChannelImage(channelUrl) {
     if (!handle) return undefined;
 
     const apiUrl = `https://www.googleapis.com/youtube/v3/channels?forHandle=${encodeURIComponent(handle)}&part=snippet&key=${YOUTUBE_API_KEY}`;
-    const data = await EleventyFetch(apiUrl, {
-      duration: "30d",
-      type: "json",
-    });
+    const res = await fetch(apiUrl);
 
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`YouTube API ${res.status} for "${handle}": ${body}`);
+      return undefined;
+    }
+
+    const data = await res.json();
     return data?.items?.[0]?.snippet?.thumbnails?.default?.url || undefined;
   } catch (e) {
     console.error(`Failed to fetch YouTube image for "${channelUrl}":`, e.message);
