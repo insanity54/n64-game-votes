@@ -113,15 +113,16 @@ function parseTableFromHtml(html) {
     let tdMatch;
     while ((tdMatch = tdRegex.exec(trContent)) !== null) {
       const cellHtml = tdMatch[1] ?? "";
-      const hrefMatch = cellHtml.match(/href="([^"]*)"/);
-      const href = hrefMatch?.[1] ?? "";
-      cells.push(decodeHtmlEntities(href || cellHtml.replace(/<[^>]*>/g, "").trim()));
+      const hrefs = [...cellHtml.matchAll(/href="([^"]*)"/g)].map(m => decodeHtmlEntities(m[1]));
+      const text = decodeHtmlEntities(cellHtml.replace(/<[^>]*>/g, "").trim());
+      cells.push(hrefs.length > 0 ? hrefs : text);
     }
     if (cells.length >= 3 && cells[0]) {
+      const votesCell = cells[2];
       rows.push({
         game: cells[0],
         completed: cells[1] ?? "",
-        votes: cells[2] ?? "",
+        votes: Array.isArray(votesCell) ? votesCell : votesCell ? [votesCell] : [],
       });
     }
   }
@@ -131,7 +132,7 @@ function parseTableFromHtml(html) {
 export default function(eleventyConfig) {
   eleventyConfig.addGlobalData("games", async () => {
     const html = await EleventyFetch(DATA_URL, {
-      duration: "1d",
+      duration: "5m",
       type: "text",
     });
 
@@ -141,8 +142,10 @@ export default function(eleventyConfig) {
     for (const row of rows) {
       const enrichedRow = { ...row };
       enrichedRow.gameImage = await fetchGameImage(row.game);
-      if (row.votes) {
-        enrichedRow.voterImage = await fetchYouTubeChannelImage(row.votes);
+      enrichedRow.voters = [];
+      for (const url of row.votes) {
+        const voterImage = await fetchYouTubeChannelImage(url);
+        enrichedRow.voters.push({ url, image: voterImage });
       }
       enriched.push(enrichedRow);
     }
@@ -154,8 +157,8 @@ export default function(eleventyConfig) {
       if (aDone && bDone) {
         return new Date(b.completed) - new Date(a.completed);
       }
-      const aVotes = a.votes ? 1 : 0;
-      const bVotes = b.votes ? 1 : 0;
+      const aVotes = a.voters.length;
+      const bVotes = b.voters.length;
       if (bVotes !== aVotes) return bVotes - aVotes;
       return a.game.localeCompare(b.game);
     });

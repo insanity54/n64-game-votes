@@ -27,13 +27,15 @@ layout: base.njk
         {% endif %}
       </td>
       <td class="cell-votes">
-        {% if game.votes %}
+        {% if game.voters.length > 0 %}
+        {% for voter in game.voters %}
         <div class="voter-info">
-          {% if game.voterImage %}
-          <img src="{{ game.voterImage }}" alt="" class="voter-thumb" loading="lazy" />
+          {% if voter.image %}
+          <img src="{{ voter.image }}" alt="" class="voter-thumb" loading="lazy" />
           {% endif %}
-          <a href="{{ game.votes }}" target="_blank" class="voter-link">{{ game.votes | channelName }}</a>
+          <a href="{{ voter.url }}" target="_blank" class="voter-link">{{ voter.url | channelName }}</a>
         </div>
+        {% endfor %}
         {% else %}
           <span class="no-votes">No votes yet</span>
         {% endif %}
