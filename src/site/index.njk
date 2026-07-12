@@ -1,0 +1,44 @@
+---
+title: Game Votes
+layout: base.njk
+---
+<table class="game-table">
+  <thead>
+    <tr>
+      <th class="col-game">Game</th>
+      <th class="col-completed">Completed</th>
+      <th class="col-votes">Voted By</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for game in games %}
+    <tr class="{% if loop.index % 2 == 0 %}row-even{% else %}row-odd{% endif %}">
+      <td class="cell-game">
+        <div class="game-info">
+          {% if game.gameImage %}
+          <img src="{{ game.gameImage }}" alt="{{ game.game }}" class="game-thumb" loading="lazy" />
+          {% endif %}
+          <span class="game-name">{{ game.game }}</span>
+        </div>
+      </td>
+      <td class="cell-completed">
+        {% if game.completed %}
+          <span class="status-done">{{ game.completed | formatDate }}</span>
+        {% endif %}
+      </td>
+      <td class="cell-votes">
+        {% if game.votes %}
+        <div class="voter-info">
+          {% if game.voterImage %}
+          <img src="{{ game.voterImage }}" alt="" class="voter-thumb" loading="lazy" />
+          {% endif %}
+          <a href="{{ game.votes }}" target="_blank" class="voter-link">{{ game.votes | channelName }}</a>
+        </div>
+        {% else %}
+          <span class="no-votes">No votes yet</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

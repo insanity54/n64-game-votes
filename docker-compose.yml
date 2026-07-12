@@ -1,0 +1,22 @@
+services:
+  builder:
+    build: .
+    volumes:
+      - site-data:/app/_site
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - site-data:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - builder
+    restart: unless-stopped
+
+volumes:
+  site-data:

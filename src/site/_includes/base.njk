@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #01009a;
+      color: #01009a;
+      padding: 2rem;
+    }
+
+    .game-table {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+
+    .game-table thead th {
+      background: #e10916;
+      color: #fff;
+      padding: 0.8rem 1rem;
+      text-align: left;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .game-table tbody td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid rgba(1,0,154,0.15);
+      vertical-align: middle;
+    }
+
+    .row-even { background: #f5b201; }
+    .row-odd { background: #d99d01; }
+
+    .game-info { display: flex; align-items: center; gap: 0.75rem; }
+
+    .game-thumb {
+      width: 96px;
+      height: 96px;
+      object-fit: cover;
+    }
+
+    .game-name { font-weight: 600; }
+
+    .status-pending { color: #01009a; font-style: italic; }
+    .status-done { color: #329900; font-weight: 600; }
+
+    .voter-info { display: flex; align-items: center; gap: 0.5rem; }
+
+    .voter-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+    }
+
+    .voter-link { color: #01009a; text-decoration: none; font-size: 1rem; }
+    .voter-link:hover { text-decoration: underline; }
+
+    .no-votes { color: rgba(1,0,154,0.5); font-style: italic; font-size: 0.85rem; }
+
+    .col-game { width: 50%; }
+    .col-cart { width: 5%; text-align: center; }
+    .col-completed { width: 20%; text-align: center; }
+    .col-votes { width: 25%; }
+    .game-table tbody td.cell-completed { text-align: center; }
+  </style>
+</head>
+<body>
+  {{ content | safe }}
+</body>
+</html>
