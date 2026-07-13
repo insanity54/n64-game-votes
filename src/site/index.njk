@@ -27,7 +27,6 @@ layout: base.njk
         {% endif %}
       </td>
       <td class="cell-votes">
-        {% if game.voters.length > 0 %}
         {% for voter in game.voters %}
         <div class="voter-info">
           {% if voter.image %}
@@ -36,9 +35,6 @@ layout: base.njk
           <a href="{{ voter.url }}" target="_blank" class="voter-link">{{ voter.url | channelName }}</a>
         </div>
         {% endfor %}
-        {% else %}
-          <span class="no-votes">No votes yet</span>
-        {% endif %}
       </td>
     </tr>
     {% endfor %}
