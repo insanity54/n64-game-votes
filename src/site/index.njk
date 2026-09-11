@@ -2,7 +2,7 @@
 title: Game Votes
 layout: base.njk
 ---
-<!-- source data: fetched {{ games.meta.fetchedAt }} | etag: {{ games.meta.etag }} | last-modified: {{ games.meta.lastModified }} -->
+<!-- source data: fetched {{ games.meta.fetchedAt }} | etag: {{ games.meta.etag }} | last-modified: {{ games.meta.lastModified }} | cache: {{ games.meta.cacheStatus }} (attempts: {{ games.meta.attempts }}, sawMiss: {{ games.meta.sawMiss }}) -->
 <table class="game-table">
   <thead>
     <tr>

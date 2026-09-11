@@ -45,12 +45,13 @@ const DATA_URL = "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64
 // The source (grimtech.net) sits behind a BunnyCDN edge that ignores query
 // strings when computing its cache key, so a `?cb=` value alone does NOT
 // guarantee a cache miss: a given edge can keep serving an outdated copy of the
-// page. To reliably read the current content we make several attempts that each
-// add cache-bypassing request headers (`Cache-Control: no-cache`) plus a unique
-// query string, then keep the response with the newest `last-modified` header
-// (a stale edge reports an old date; the origin reports the page's real one).
-// This way a single stale edge cannot poison the build.
-async function fetchSource(attempts = 4) {
+// page. Every attempt therefore also sends cache-bypassing request headers
+// (`Cache-Control: no-cache`), which forces the edge to revalidate with origin.
+// We only trust a response whose `cdn-cache` header reports `MISS` (i.e. it was
+// just pulled from origin this instant); any `HIT` is a cached copy that may be
+// stale and is discarded. If no attempt returns a `MISS`, we keep the response
+// with the newest `last-modified` as a fallback rather than fail the build.
+async function fetchSource(attempts = 5) {
   const candidates = [];
 
   for (let i = 0; i < attempts; i++) {
@@ -70,6 +71,7 @@ async function fetchSource(attempts = 4) {
         html: await res.text(),
         etag: res.headers.get("etag"),
         lastModified: res.headers.get("last-modified"),
+        cacheStatus: res.headers.get("cdn-cache") || "unknown",
         fetchedAt: new Date().toISOString(),
       });
     } catch (e) {
@@ -81,11 +83,16 @@ async function fetchSource(attempts = 4) {
     throw new Error(`Failed to fetch ${DATA_URL} after ${attempts} attempts`);
   }
 
-  const newest = candidates.reduce((best, c) => {
+  const fresh = candidates.find((c) => c.cacheStatus === "MISS");
+  const pool = fresh ? [fresh] : candidates;
+  const newest = pool.reduce((best, c) => {
     const a = Date.parse(best.lastModified) || 0;
     const b = Date.parse(c.lastModified) || 0;
     return b > a ? c : best;
-  }, candidates[0]);
+  }, pool[0]);
+
+  newest.attempts = candidates.length;
+  newest.sawMiss = Boolean(fresh);
 
   return newest;
 }
@@ -217,6 +224,9 @@ export default function(eleventyConfig) {
       etag: source.etag,
       lastModified: source.lastModified,
       fetchedAt: source.fetchedAt,
+      cacheStatus: source.cacheStatus,
+      attempts: source.attempts,
+      sawMiss: source.sawMiss,
     };
 
     return enriched;
