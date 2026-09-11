@@ -1,4 +1,3 @@
-import EleventyFetch from "@11ty/eleventy-fetch";
 import { createHash } from "crypto";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
@@ -37,6 +36,20 @@ const GAMESDB_API_KEY = process.env.GAMESDB_API_KEY;
 const GAMESDB_BASE = "https://api.thegamesdb.net/v1.1";
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const DATA_URL = "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64-Game-I-Play-Next";
+
+// Fetch the source page fresh on every build. Unlike EleventyFetch, this never
+// silently falls back to an expired cache entry, so vote data cannot go stale
+// when the source is temporarily unreachable. A failure fails the build loudly
+// instead of regenerating the site from outdated data.
+async function fetchSource() {
+  const res = await fetch(DATA_URL);
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`HTTP ${res.status} for ${DATA_URL}: ${body}`);
+    throw new Error(`HTTP ${res.status} for ${DATA_URL}`);
+  }
+  return res.text();
+}
 
 async function fetchGameImage(gameName) {
   if (!GAMESDB_API_KEY) {
@@ -131,10 +144,7 @@ function parseTableFromHtml(html) {
 
 export default function(eleventyConfig) {
   eleventyConfig.addGlobalData("games", async () => {
-    const html = await EleventyFetch(DATA_URL, {
-      duration: "5m",
-      type: "text",
-    });
+    const html = await fetchSource();
 
     const rows = parseTableFromHtml(html);
     const enriched = [];
