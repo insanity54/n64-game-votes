@@ -41,21 +41,53 @@ const DATA_URL = "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64
 // silently falls back to an expired cache entry, so vote data cannot go stale
 // when the source is temporarily unreachable. A failure fails the build loudly
 // instead of regenerating the site from outdated data.
-async function fetchSource() {
-  // Unique query string bypasses any cached copy of the source page that a CDN
-  // edge may be serving, ensuring each build reads the current content.
-  const res = await fetch(`${DATA_URL}?cb=${Date.now()}`);
-  if (!res.ok) {
-    const body = await res.text();
-    console.error(`HTTP ${res.status} for ${DATA_URL}: ${body}`);
-    throw new Error(`HTTP ${res.status} for ${DATA_URL}`);
+//
+// The source (grimtech.net) sits behind a BunnyCDN edge that ignores query
+// strings when computing its cache key, so a `?cb=` value alone does NOT
+// guarantee a cache miss: a given edge can keep serving an outdated copy of the
+// page. To reliably read the current content we make several attempts that each
+// add cache-bypassing request headers (`Cache-Control: no-cache`) plus a unique
+// query string, then keep the response with the newest `last-modified` header
+// (a stale edge reports an old date; the origin reports the page's real one).
+// This way a single stale edge cannot poison the build.
+async function fetchSource(attempts = 4) {
+  const candidates = [];
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(`${DATA_URL}?cb=${Date.now()}-${i}-${Math.random()}`, {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error(`HTTP ${res.status} for ${DATA_URL}: ${body}`);
+        continue;
+      }
+      candidates.push({
+        html: await res.text(),
+        etag: res.headers.get("etag"),
+        lastModified: res.headers.get("last-modified"),
+        fetchedAt: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error(`Fetch attempt ${i + 1}/${attempts} failed for ${DATA_URL}:`, e.message);
+    }
   }
-  return {
-    html: await res.text(),
-    etag: res.headers.get("etag"),
-    lastModified: res.headers.get("last-modified"),
-    fetchedAt: new Date().toISOString(),
-  };
+
+  if (candidates.length === 0) {
+    throw new Error(`Failed to fetch ${DATA_URL} after ${attempts} attempts`);
+  }
+
+  const newest = candidates.reduce((best, c) => {
+    const a = Date.parse(best.lastModified) || 0;
+    const b = Date.parse(c.lastModified) || 0;
+    return b > a ? c : best;
+  }, candidates[0]);
+
+  return newest;
 }
 
 async function fetchGameImage(gameName) {
