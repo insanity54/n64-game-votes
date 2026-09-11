@@ -42,7 +42,9 @@ const DATA_URL = "https://grimtech.net/2026/nintendo64/Chatters-Choose-Which-N64
 // when the source is temporarily unreachable. A failure fails the build loudly
 // instead of regenerating the site from outdated data.
 async function fetchSource() {
-  const res = await fetch(DATA_URL);
+  // Unique query string bypasses any cached copy of the source page that a CDN
+  // edge may be serving, ensuring each build reads the current content.
+  const res = await fetch(`${DATA_URL}?cb=${Date.now()}`);
   if (!res.ok) {
     const body = await res.text();
     console.error(`HTTP ${res.status} for ${DATA_URL}: ${body}`);
