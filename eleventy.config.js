@@ -48,7 +48,12 @@ async function fetchSource() {
     console.error(`HTTP ${res.status} for ${DATA_URL}: ${body}`);
     throw new Error(`HTTP ${res.status} for ${DATA_URL}`);
   }
-  return res.text();
+  return {
+    html: await res.text(),
+    etag: res.headers.get("etag"),
+    lastModified: res.headers.get("last-modified"),
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 async function fetchGameImage(gameName) {
@@ -144,7 +149,8 @@ function parseTableFromHtml(html) {
 
 export default function(eleventyConfig) {
   eleventyConfig.addGlobalData("games", async () => {
-    const html = await fetchSource();
+    const source = await fetchSource();
+    const html = source.html;
 
     const rows = parseTableFromHtml(html);
     const enriched = [];
@@ -172,6 +178,12 @@ export default function(eleventyConfig) {
       if (bVotes !== aVotes) return bVotes - aVotes;
       return a.game.localeCompare(b.game);
     });
+
+    enriched.meta = {
+      etag: source.etag,
+      lastModified: source.lastModified,
+      fetchedAt: source.fetchedAt,
+    };
 
     return enriched;
   });
